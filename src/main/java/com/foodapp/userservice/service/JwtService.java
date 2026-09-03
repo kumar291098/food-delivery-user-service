@@ -2,6 +2,7 @@ package com.foodapp.userservice.service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -12,11 +13,13 @@ import java.util.Date;
 public class JwtService {
 
     private final SecretKey key;
+    private final long expirationMs;
 
-    public JwtService() {
-        // A secure 256-bit key for HMAC-SHA256
-        String secret = "9a4f2c8d3b7a1e5f8g2h6i0j4k8l2m6n0o4p8q2r6s0t4u8v2w6x0y4z8A2B6C0";
+    public JwtService(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.expiration-ms:86400000}") long expirationMs) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expirationMs = expirationMs;
     }
 
     public String generateToken(String userId, String email, String role) {
@@ -25,7 +28,7 @@ public class JwtService {
                 .claim("email", email)
                 .claim("role", role)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 86400000)) // 24 hours
+                .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(key)
                 .compact();
     }
